@@ -855,7 +855,7 @@ echo 'tezos  ALL=(ALL:ALL) ALL' >> /etc/sudoers
 echo "======= install tezos =========="
 
 echo "======= install tezos dependencies =========="
-apt install --yes rsync git m4 build-essential patch unzip wget pkg-config libgmp-dev libev-dev libhidapi-dev libffi-dev opam jq zlib1g-dev
+apt install --yes rsync git m4 build-essential patch unzip wget pkg-config libgmp-dev libev-dev libhidapi-dev libffi-dev opam jq zlib1g-dev autoconf
 
 
 echo "======== setup complete, rebooting ==============="
