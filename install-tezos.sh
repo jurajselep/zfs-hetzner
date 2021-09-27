@@ -18,3 +18,5 @@ make build-deps
 echo "======= compile source =========="
 eval $(opam env)
 make
+
+./tezos-node --version
