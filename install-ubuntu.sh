@@ -221,7 +221,7 @@ function ask_swap_size {
   local swap_size_invalid_message=
 
   while [[ ! $v_swap_size =~ ^[0-9]+$ ]]; do
-    v_swap_size=$(dialog --inputbox "${swap_size_invalid_message}Enter the swap size in GiB (0 for no swap):" 30 100 2 3>&1 1>&2 2>&3)
+    v_swap_size=$(dialog --inputbox "${swap_size_invalid_message}Enter the swap size in GiB (0 for no swap):" 30 100 4 3>&1 1>&2 2>&3)
 
     swap_size_invalid_message="Invalid swap size! "
   done
@@ -236,7 +236,7 @@ function ask_free_tail_space {
   local tail_space_invalid_message=
 
   while [[ ! $v_free_tail_space =~ ^[0-9]+$ ]]; do
-    v_free_tail_space=$(dialog --inputbox "${tail_space_invalid_message}Enter the space to leave at the end of each disk (0 for none):" 30 100 0 3>&1 1>&2 2>&3)
+    v_free_tail_space=$(dialog --inputbox "${tail_space_invalid_message}Enter the space to leave at the end of each disk (0 for none):" 30 100 50 3>&1 1>&2 2>&3)
 
     tail_space_invalid_message="Invalid size! "
   done
