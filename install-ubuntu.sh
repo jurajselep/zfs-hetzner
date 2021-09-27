@@ -365,6 +365,10 @@ function chroot_execute {
   chroot $c_zfs_mount_dir bash -c "$1"
 }
 
+function tezos_execute {
+  su -c "cd /home/tezos/; $1 " -m tezos 
+}
+
 function unmount_and_export_fs {
   # shellcheck disable=SC2119
   print_step_info_header
@@ -853,27 +857,27 @@ echo "======= install tezos =========="
 echo "======= install tezos dependencies =========="
 apt install --yes rsync git m4 build-essential patch unzip wget pkg-config libgmp-dev libev-dev libhidapi-dev libffi-dev opam jq zlib1g-dev
 
-echo "======= change user to tezos =========="
-su - tezos
+function tezos_execute {
+  sudo -H -u tezos bash "cd /home/tezos/; $1" 
+}
 
 echo "======= install rust =========="
-wget https://sh.rustup.rs/rustup-init.sh
-chmod +x rustup-init.sh
-./rustup-init.sh --profile minimal --default-toolchain 1.52.1 -y
-source $HOME/.cargo/env
+tezos_execute "wget https://sh.rustup.rs/rustup-init.sh"
+tezos_execute "chmod +x rustup-init.sh"
+tezos_execute "./rustup-init.sh --profile minimal --default-toolchain 1.52.1 -y"
+tezos_execute "export HOME=/home/tezos;source $HOME/.cargo/env;cargo --version"
 
 echo "======= get tezos source =========="
-git clone https://gitlab.com/tezos/tezos.git
-cd tezos
-git checkout latest-release
+tezos_execute "git clone https://gitlab.com/tezos/tezos.git"
+tezos_execute "cd tezos"
+tezos_execute "git checkout latest-release"
 
 echo "======= install tezos dependecies =========="
-opam init --bare -y
-make build-deps
+tezos_execute "opam init --bare -y"
+tezos_execute "eval $(opam env);make build-deps"
 
 echo "======= compile source =========="
-eval $(opam env)
-make
+tezos_execute "eval $(opam env);make"
 
 echo "======== setup complete, rebooting ==============="
 reboot
