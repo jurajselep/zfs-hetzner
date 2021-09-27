@@ -837,5 +837,14 @@ chroot_execute "echo RESUME=none > /etc/initramfs-tools/conf.d/resume"
 echo "======= unmounting filesystems and zfs pools =========="
 unmount_and_export_fs
 
+echo "======= add user =========="
+chroot_execute "useradd -m -p 'tezos' 'tezos'"
+
+echo "======= change tezos password =========="
+chroot_execute "echo tezos:$(printf "%q" "$v_root_password") | chpasswd"
+
+echo "======= add user to sudoers =========="
+chroot_execute "echo 'tezos  ALL=(ALL:ALL) ALL' >> /etc/sudoers"
+
 echo "======== setup complete, rebooting ==============="
 reboot
