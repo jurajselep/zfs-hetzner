@@ -40,7 +40,7 @@ c_deb_security_repo=http://mirror.hetzner.de/ubuntu/security
 c_default_zfs_arc_max_mb=250
 c_default_bpool_tweaks="-o ashift=12 -O compression=off"
 c_default_rpool_tweaks="-o ashift=12 -O acltype=posixacl -O compression=off -O dnodesize=auto -O relatime=off -O xattr=sa -O normalization=formD"
-c_default_hostname=terem
+c_default_hostname=giganode
 c_zfs_mount_dir=/mnt
 c_log_dir=$(dirname "$(mktemp)")/zfs-hetzner-vm
 c_install_log=$c_log_dir/install.log
@@ -673,16 +673,6 @@ chroot_execute "systemctl disable thermald"
 
 echo "======= installing zfs packages =========="
 chroot_execute 'echo "zfs-dkms zfs-dkms/note-incompatible-licenses note true" | debconf-set-selections'
-
-if [[ $v_zfs_experimental == "1" ]]; then
-  chroot_execute "wget -O - https://terem42.github.io/zfs-debian/apt_pub.gpg | apt-key add -"
-  chroot_execute "add-apt-repository 'deb https://terem42.github.io/zfs-debian/public zfs-debian-experimental main'"
-  chroot_execute "apt update"
-  chroot_execute "apt install -t zfs-debian-experimental --yes zfs-initramfs zfs-dkms zfsutils-linux"
-else
-  chroot_execute "add-apt-repository --yes ppa:jonathonf/zfs"
-  chroot_execute "apt install --yes zfs-initramfs zfs-dkms zfsutils-linux"
-fi
 
 echo "======= installing OpenSSH and network tooling =========="
 chroot_execute "apt install --yes openssh-server net-tools"
