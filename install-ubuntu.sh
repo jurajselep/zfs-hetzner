@@ -858,12 +858,6 @@ echo "========= add swap, if defined"
 [[ $v_swap_size -gt 0 ]] && chroot_execute "echo /dev/zvol/$v_rpool_name/swap none swap discard 0 0 >> /etc/fstab" || true
 chroot_execute "echo RESUME=none > /etc/initramfs-tools/conf.d/resume"
 
-echo "======= install zfs snapshots =========="
-chroot_execute "wget https://github.com/zfsonlinux/zfs-auto-snapshot/archive/upstream/1.2.4.tar.gz"
-chroot_execute "tar -xzf 1.2.4.tar.gz"
-chroot_execute "cd zfs-auto-snapshot-upstream-1.2.4"
-chroot_execute "make install"
-
 echo "======= unmounting filesystems and zfs pools =========="
 unmount_and_export_fs
 
