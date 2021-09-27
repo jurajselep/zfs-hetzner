@@ -29,6 +29,7 @@ v_hostname=
 v_kernel_variant=
 v_zfs_arc_max_mb=
 v_root_password=
+v_user_password=
 v_encrypt_rpool=             # 0=false, 1=true
 v_passphrase=
 v_zfs_experimental=
@@ -310,6 +311,23 @@ function ask_root_password {
   set -x
 }
 
+function ask_user_password {
+  # shellcheck disable=SC2119
+  print_step_info_header
+
+  set +x
+  local password_invalid_message=
+  local password_repeat=-
+
+  while [[ "$v_user_password" != "$password_repeat" || "$v_user_password" == "" ]]; do
+    v_user_password=$(dialog --passwordbox "${password_invalid_message}Please enter the user account password (can't be empty):" 30 100 3>&1 1>&2 2>&3)
+    password_repeat=$(dialog --passwordbox "Please repeat the password:" 30 100 3>&1 1>&2 2>&3)
+
+    password_invalid_message="Passphrase empty, or not matching! "
+  done
+  set -x
+}
+
 function ask_encryption {
   print_step_info_header
 
@@ -448,6 +466,8 @@ ask_zfs_arc_max_size
 ask_zfs_experimental
 
 ask_root_password
+
+ask_user_password
 
 ask_hostname
 
