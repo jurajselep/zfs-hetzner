@@ -221,7 +221,7 @@ function ask_swap_size {
   local swap_size_invalid_message=
 
   while [[ ! $v_swap_size =~ ^[0-9]+$ ]]; do
-    v_swap_size=$(dialog --inputbox "${swap_size_invalid_message}Enter the swap size in GiB (0 for no swap):" 30 100 4 3>&1 1>&2 2>&3)
+    v_swap_size=$(dialog --inputbox "${swap_size_invalid_message}Enter the swap size in GiB (0 for no swap):" 30 100 2 3>&1 1>&2 2>&3)
 
     swap_size_invalid_message="Invalid swap size! "
   done
@@ -236,7 +236,7 @@ function ask_free_tail_space {
   local tail_space_invalid_message=
 
   while [[ ! $v_free_tail_space =~ ^[0-9]+$ ]]; do
-    v_free_tail_space=$(dialog --inputbox "${tail_space_invalid_message}Enter the space to leave at the end of each disk (0 for none):" 30 100 50 3>&1 1>&2 2>&3)
+    v_free_tail_space=$(dialog --inputbox "${tail_space_invalid_message}Enter the space to leave at the end of each disk (0 for none):" 30 100 0 3>&1 1>&2 2>&3)
 
     tail_space_invalid_message="Invalid size! "
   done
@@ -838,46 +838,42 @@ echo "======= unmounting filesystems and zfs pools =========="
 unmount_and_export_fs
 
 echo "======= add user =========="
-chroot_execute "groupadd 'tezos'"
-chroot_execute "useradd mynewuser -s /bin/bash -m -g 'tezos' -G 'tezos'"
+groupadd 'tezos'
+useradd mynewuser -s /bin/bash -m -g 'tezos' -G 'tezos'
 
 echo "======= change tezos password =========="
-chroot_execute "echo tezos:$(printf "%q" "$v_root_password") | chpasswd"
+echo tezos:$(printf "%q" "$v_root_password") | chpasswd
 
 echo "======= add user to sudoers =========="
-chroot_execute "echo 'tezos  ALL=(ALL:ALL) ALL' >> /etc/sudoers"
-
-
+echo 'tezos  ALL=(ALL:ALL) ALL' >> /etc/sudoers
 
 
 echo "======= install tezos =========="
 
 echo "======= install tezos dependencies =========="
-chroot_execute "apt install --yes rsync git m4 build-essential patch unzip wget pkg-config libgmp-dev libev-dev libhidapi-dev libffi-dev opam jq zlib1g-dev"
+apt install --yes rsync git m4 build-essential patch unzip wget pkg-config libgmp-dev libev-dev libhidapi-dev libffi-dev opam jq zlib1g-dev
 
 echo "======= change user to tezos =========="
-chroot_execute "su - tezos"
+su - tezos
 
 echo "======= install rust =========="
-chroot_execute "wget https://sh.rustup.rs/rustup-init.sh"
-chroot_execute "chmod +x rustup-init.sh"
-chroot_execute "./rustup-init.sh --profile minimal --default-toolchain 1.52.1 -y"
-chroot_execute "source $HOME/.cargo/env"
+wget https://sh.rustup.rs/rustup-init.sh
+chmod +x rustup-init.sh
+./rustup-init.sh --profile minimal --default-toolchain 1.52.1 -y
+source $HOME/.cargo/env
 
 echo "======= get tezos source =========="
-chroot_execute "git clone https://gitlab.com/tezos/tezos.git"
-chroot_execute "cd tezos"
-chroot_execute "git checkout latest-release"
+git clone https://gitlab.com/tezos/tezos.git
+cd tezos
+git checkout latest-release
 
 echo "======= install tezos dependecies =========="
-chroot_execute "opam init --bare"
-chroot_execute "make build-deps"
+opam init --bare
+make build-deps
 
 echo "======= compile source =========="
-chroot_execute "eval $(opam env)"
-chroot_execute "make"
-
-chroot_execute "./tezos-node --version"
+eval $(opam env)
+make
 
 echo "======== setup complete, rebooting ==============="
 reboot
