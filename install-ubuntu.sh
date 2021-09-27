@@ -428,7 +428,7 @@ ask_encryption
 
 ask_zfs_arc_max_size
 
-ask_root_password
+#ask_root_password
 
 ask_hostname
 
@@ -695,8 +695,8 @@ sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' "$c_zfs_mount_di
 chroot_execute "rm /etc/ssh/ssh_host_*"
 chroot_execute "dpkg-reconfigure openssh-server -f noninteractive"
 
-echo "======= set root password =========="
-chroot_execute "echo root:$(printf "%q" "$v_root_password") | chpasswd"
+#echo "======= set root password =========="
+#chroot_execute "echo root:$(printf "%q" "$v_root_password") | chpasswd"
 
 echo "======= setting up zfs cache =========="
 cp /etc/zfs/zpool.cache /mnt/etc/zfs/zpool.cache
