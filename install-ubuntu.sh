@@ -838,13 +838,46 @@ echo "======= unmounting filesystems and zfs pools =========="
 unmount_and_export_fs
 
 echo "======= add user =========="
-chroot_execute "useradd -m -p 'tezos' 'tezos'"
+chroot_execute "groupadd 'tezos'"
+chroot_execute "useradd mynewuser -s /bin/bash -m -g 'tezos' -G 'tezos'"
 
 echo "======= change tezos password =========="
 chroot_execute "echo tezos:$(printf "%q" "$v_root_password") | chpasswd"
 
 echo "======= add user to sudoers =========="
 chroot_execute "echo 'tezos  ALL=(ALL:ALL) ALL' >> /etc/sudoers"
+
+
+
+
+echo "======= install tezos =========="
+
+echo "======= install tezos dependencies =========="
+chroot_execute "apt install --yes rsync git m4 build-essential patch unzip wget pkg-config libgmp-dev libev-dev libhidapi-dev libffi-dev opam jq zlib1g-dev"
+
+echo "======= change user to tezos =========="
+chroot_execute "su - tezos"
+
+echo "======= install rust =========="
+chroot_execute "wget https://sh.rustup.rs/rustup-init.sh"
+chroot_execute "chmod +x rustup-init.sh"
+chroot_execute "./rustup-init.sh --profile minimal --default-toolchain 1.52.1 -y"
+chroot_execute "source $HOME/.cargo/env"
+
+echo "======= get tezos source =========="
+chroot_execute "git clone https://gitlab.com/tezos/tezos.git"
+chroot_execute "cd tezos"
+chroot_execute "git checkout latest-release"
+
+echo "======= install tezos dependecies =========="
+chroot_execute "opam init --bare"
+chroot_execute "make build-deps"
+
+echo "======= compile source =========="
+chroot_execute "eval $(opam env)"
+chroot_execute "make"
+
+chroot_execute "./tezos-node --version"
 
 echo "======== setup complete, rebooting ==============="
 reboot
