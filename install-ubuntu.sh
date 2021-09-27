@@ -868,7 +868,7 @@ cd tezos
 git checkout latest-release
 
 echo "======= install tezos dependecies =========="
-opam init --bare
+opam init --bare -y
 make build-deps
 
 echo "======= compile source =========="
