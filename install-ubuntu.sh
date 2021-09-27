@@ -857,27 +857,6 @@ echo "======= install tezos =========="
 echo "======= install tezos dependencies =========="
 apt install --yes rsync git m4 build-essential patch unzip wget pkg-config libgmp-dev libev-dev libhidapi-dev libffi-dev opam jq zlib1g-dev
 
-function tezos_execute {
-  sudo -H -u tezos bash "cd /home/tezos/; $1" 
-}
-
-echo "======= install rust =========="
-tezos_execute "wget https://sh.rustup.rs/rustup-init.sh"
-tezos_execute "chmod +x rustup-init.sh"
-tezos_execute "./rustup-init.sh --profile minimal --default-toolchain 1.52.1 -y"
-tezos_execute "export HOME=/home/tezos;source $HOME/.cargo/env;cargo --version"
-
-echo "======= get tezos source =========="
-tezos_execute "git clone https://gitlab.com/tezos/tezos.git"
-tezos_execute "cd tezos"
-tezos_execute "git checkout latest-release"
-
-echo "======= install tezos dependecies =========="
-tezos_execute "opam init --bare -y"
-tezos_execute "eval $(opam env);make build-deps"
-
-echo "======= compile source =========="
-tezos_execute "eval $(opam env);make"
 
 echo "======== setup complete, rebooting ==============="
 reboot
