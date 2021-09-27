@@ -441,7 +441,7 @@ function unmount_and_export_fs {
 export LC_ALL=en_US.UTF-8
 export NCURSES_NO_UTF8_ACS=1
 
-check_prerequisites
+# check_prerequisites
 
 display_intro_banner
 
@@ -726,13 +726,13 @@ fi
 echo "======= installing OpenSSH and network tooling =========="
 chroot_execute "apt install --yes openssh-server net-tools"
 
-echo "======= setup OpenSSH  =========="
-mkdir -p "$c_zfs_mount_dir/root/.ssh/"
-cp /root/.ssh/authorized_keys "$c_zfs_mount_dir/root/.ssh/authorized_keys"
-sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' "$c_zfs_mount_dir/etc/ssh/sshd_config"
-sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' "$c_zfs_mount_dir/etc/ssh/sshd_config"
-chroot_execute "rm /etc/ssh/ssh_host_*"
-chroot_execute "dpkg-reconfigure openssh-server -f noninteractive"
+# echo "======= setup OpenSSH  =========="
+# mkdir -p "$c_zfs_mount_dir/root/.ssh/"
+# cp /root/.ssh/authorized_keys "$c_zfs_mount_dir/root/.ssh/authorized_keys"
+# sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' "$c_zfs_mount_dir/etc/ssh/sshd_config"
+# sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' "$c_zfs_mount_dir/etc/ssh/sshd_config"
+# chroot_execute "rm /etc/ssh/ssh_host_*"
+# chroot_execute "dpkg-reconfigure openssh-server -f noninteractive"
 
 echo "======= set root password =========="
 chroot_execute "echo root:$(printf "%q" "$v_root_password") | chpasswd"
