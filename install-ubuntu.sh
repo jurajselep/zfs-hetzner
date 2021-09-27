@@ -839,7 +839,7 @@ unmount_and_export_fs
 
 echo "======= add user =========="
 groupadd 'tezos'
-useradd mynewuser -s /bin/bash -m -g 'tezos' -G 'tezos'
+useradd tezos -s /bin/bash -m -g 'tezos' -G 'tezos'
 
 echo "======= change tezos password =========="
 echo tezos:$(printf "%q" "$v_root_password") | chpasswd
