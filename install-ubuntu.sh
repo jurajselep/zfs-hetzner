@@ -29,8 +29,9 @@ v_hostname=
 v_kernel_variant=
 v_zfs_arc_max_mb=
 v_root_password=
-v_encrypt_rpool=0             # 0=false, 1=true
+v_encrypt_rpool=             # 0=false, 1=true
 v_passphrase=
+v_zfs_experimental=
 v_suitable_disks=()
 
 # Constants
@@ -38,9 +39,9 @@ c_deb_packages_repo=http://mirror.hetzner.de/ubuntu/packages
 c_deb_security_repo=http://mirror.hetzner.de/ubuntu/security
 
 c_default_zfs_arc_max_mb=250
-c_default_bpool_tweaks="-o ashift=12 -O compression=off"
-c_default_rpool_tweaks="-o ashift=12 -O acltype=posixacl -O compression=off -O dnodesize=auto -O relatime=off -O xattr=sa -O normalization=formD"
-c_default_hostname=giganode
+c_default_bpool_tweaks="-o ashift=12 -O compression=lz4"
+c_default_rpool_tweaks="-o ashift=12 -O acltype=posixacl -O compression=zstd-9 -O dnodesize=auto -O relatime=on -O xattr=sa -O normalization=formD"
+c_default_hostname=terem
 c_zfs_mount_dir=/mnt
 c_log_dir=$(dirname "$(mktemp)")/zfs-hetzner-vm
 c_install_log=$c_log_dir/install.log
@@ -329,13 +330,25 @@ function ask_encryption {
   set -x
 }
 
+function ask_zfs_experimental {
+  print_step_info_header
+
+  if dialog --defaultno --yesno 'Do you want to use experimental zfs module build?' 30 100; then
+    v_zfs_experimental=1
+  fi
+}
+
 function ask_hostname {
   # shellcheck disable=SC2119
   print_step_info_header
 
   local hostname_invalid_message=
 
-  v_hostname=$(dialog --inputbox "${hostname_invalid_message}Set the host name" 30 100 "$c_default_hostname" 3>&1 1>&2 2>&3)
+  while [[ ! $v_hostname =~ ^[a-z][a-zA-Z0-9\-_:.-]+$ ]]; do
+    v_hostname=$(dialog --inputbox "${hostname_invalid_message}Set the host name" 30 100 "$c_default_hostname" 3>&1 1>&2 2>&3)
+
+    hostname_invalid_message="Invalid host name! "
+  done
 
   print_variables v_hostname
 }
@@ -428,7 +441,9 @@ ask_encryption
 
 ask_zfs_arc_max_size
 
-#ask_root_password
+ask_zfs_experimental
+
+ask_root_password
 
 ask_hostname
 
@@ -674,6 +689,16 @@ chroot_execute "systemctl disable thermald"
 echo "======= installing zfs packages =========="
 chroot_execute 'echo "zfs-dkms zfs-dkms/note-incompatible-licenses note true" | debconf-set-selections'
 
+if [[ $v_zfs_experimental == "1" ]]; then
+  chroot_execute "wget -O - https://terem42.github.io/zfs-debian/apt_pub.gpg | apt-key add -"
+  chroot_execute "add-apt-repository 'deb https://terem42.github.io/zfs-debian/public zfs-debian-experimental main'"
+  chroot_execute "apt update"
+  chroot_execute "apt install -t zfs-debian-experimental --yes zfs-initramfs zfs-dkms zfsutils-linux"
+else
+  chroot_execute "add-apt-repository --yes ppa:jonathonf/zfs"
+  chroot_execute "apt install --yes zfs-initramfs zfs-dkms zfsutils-linux"
+fi
+
 echo "======= installing OpenSSH and network tooling =========="
 chroot_execute "apt install --yes openssh-server net-tools"
 
@@ -685,8 +710,8 @@ sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' "$c_zfs_mount_di
 chroot_execute "rm /etc/ssh/ssh_host_*"
 chroot_execute "dpkg-reconfigure openssh-server -f noninteractive"
 
-#echo "======= set root password =========="
-#chroot_execute "echo root:$(printf "%q" "$v_root_password") | chpasswd"
+echo "======= set root password =========="
+chroot_execute "echo root:$(printf "%q" "$v_root_password") | chpasswd"
 
 echo "======= setting up zfs cache =========="
 cp /etc/zfs/zpool.cache /mnt/etc/zfs/zpool.cache
@@ -710,6 +735,38 @@ chroot_execute "echo 'GRUB_DISABLE_OS_PROBER=true'   >> /etc/default/grub"
 for ((i = 1; i < ${#v_selected_disks[@]}; i++)); do
   dd if="${v_selected_disks[0]}-part1" of="${v_selected_disks[i]}-part1"
 done
+
+if [[ $v_encrypt_rpool == "1" ]]; then
+  echo "=========set up dropbear=============="
+  chroot_execute "apt install --yes dropbear-initramfs"
+
+  cp /root/.ssh/authorized_keys "$c_zfs_mount_dir/etc/dropbear-initramfs/authorized_keys"
+
+  cp "$c_zfs_mount_dir/etc/ssh/ssh_host_rsa_key" "$c_zfs_mount_dir/etc/ssh/ssh_host_rsa_key_temp"
+  chroot_execute "ssh-keygen -p -i -m pem -N '' -f /etc/ssh/ssh_host_rsa_key_temp"
+  chroot_execute "/usr/lib/dropbear/dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key_temp /etc/dropbear-initramfs/dropbear_rsa_host_key"
+  rm -rf "$c_zfs_mount_dir/etc/ssh/ssh_host_rsa_key_temp"
+
+  cp "$c_zfs_mount_dir/etc/ssh/ssh_host_ecdsa_key" "$c_zfs_mount_dir/etc/ssh/ssh_host_ecdsa_key_temp"
+  chroot_execute "ssh-keygen -p -i -m pem -N '' -f /etc/ssh/ssh_host_ecdsa_key_temp"
+  chroot_execute "/usr/lib/dropbear/dropbearconvert openssh dropbear /etc/ssh/ssh_host_ecdsa_key_temp /etc/dropbear-initramfs/dropbear_ecdsa_host_key"
+  chroot_execute "rm -rf /etc/ssh/ssh_host_ecdsa_key_temp"
+  rm -rf "$c_zfs_mount_dir/etc/ssh/ssh_host_ecdsa_key_temp"
+
+  rm -rf "$c_zfs_mount_dir/etc/dropbear-initramfs/dropbear_dss_host_key"
+
+  cd "$c_zfs_mount_dir/root"
+  wget http://ftp.de.debian.org/debian/pool/main/libt/libtommath/libtommath1_1.1.0-3_amd64.deb
+  wget http://ftp.de.debian.org/debian/pool/main/d/dropbear/dropbear-bin_2018.76-5_amd64.deb
+  wget http://ftp.de.debian.org/debian/pool/main/d/dropbear/dropbear-initramfs_2018.76-5_all.deb
+
+  chroot_execute "dpkg -i /root/libtommath1_1.1.0-3_amd64.deb"
+  chroot_execute "dpkg -i /root/dropbear-bin_2018.76-5_amd64.deb"
+  chroot_execute "dpkg -i /root/dropbear-initramfs_2018.76-5_all.deb"
+
+  rm $c_zfs_mount_dir/root/*.deb
+  cd /root
+fi
 
 echo "============setup root prompt============"
 cat > "$c_zfs_mount_dir/root/.bashrc" <<CONF
