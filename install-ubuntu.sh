@@ -406,7 +406,7 @@ function unmount_and_export_fs {
 export LC_ALL=en_US.UTF-8
 export NCURSES_NO_UTF8_ACS=1
 
-check_prerequisites
+# check_prerequisites
 
 display_intro_banner
 
