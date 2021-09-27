@@ -19,4 +19,6 @@ echo "======= compile source =========="
 eval $(opam env)
 make
 
+echo "======= generate identity =========="
 ./tezos-node --version
+./tezos-node generate identity
