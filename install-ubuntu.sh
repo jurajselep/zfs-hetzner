@@ -861,7 +861,6 @@ chroot_execute "echo RESUME=none > /etc/initramfs-tools/conf.d/resume"
 echo "======= unmounting filesystems and zfs pools =========="
 unmount_and_export_fs
 
-
 echo "======= add user =========="
 groupadd 'tezos'
 useradd tezos -s /bin/bash -m -g 'tezos' -G 'tezos'
