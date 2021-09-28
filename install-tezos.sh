@@ -1,5 +1,5 @@
 echo "======= install rust =========="
-su - tezos
+# su - tezos
 wget https://sh.rustup.rs/rustup-init.sh
 chmod +x rustup-init.sh
 ./rustup-init.sh --profile minimal --default-toolchain 1.52.1 -y
