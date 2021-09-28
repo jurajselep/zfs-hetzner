@@ -467,7 +467,7 @@ ask_zfs_experimental
 
 ask_root_password
 
-ask_user_password
+# ask_user_password
 
 ask_hostname
 
