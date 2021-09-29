@@ -5,6 +5,7 @@ useradd tezos -s /bin/bash -m -g 'tezos' -G 'tezos'
 echo "======= add user to sudoers =========="
 echo 'tezos  ALL=(ALL:ALL) ALL' >> /etc/sudoers
 
+mkdir /home/tezos/
 mkdir /home/tezos/.ssh/
 chown -R tezos:tezos /home/tezos/.ssh/
 chmod 700 /home/tezos/.ssh/
