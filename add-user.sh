@@ -12,6 +12,7 @@ chmod 700 /home/tezos/.ssh/
 touch /home/tezos/.ssh/id_rsa
 touch /home/tezos/.ssh/authorized_keys
 chown -R tezos:tezos /home/tezos/.ssh/authorized_keys
+chmod 400 /home/tezos/.ssh/id_rsa
 chmod 600 /home/tezos/.ssh/authorized_keys
 
 echo "======= install tezos =========="
