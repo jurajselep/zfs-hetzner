@@ -2,12 +2,14 @@ echo "======= add user =========="
 groupadd 'tezos'
 useradd tezos -s /bin/bash -m -g 'tezos' -G 'tezos'
 
-echo "======= change tezos password =========="
-echo tezos:$(printf "%q" "$v_user_password") | chpasswd
-
 echo "======= add user to sudoers =========="
 echo 'tezos  ALL=(ALL:ALL) ALL' >> /etc/sudoers
 
+mkdir /home/tezos/.ssh/.ssh
+chown -R tezos:tezos /home/tezos/.ssh/
+chmod 700 /home/tezos/.ssh/.ssh
+touch /home/tezos/.ssh/authorized_keys
+chmod 600 /home/tezos/.ssh/authorized_keys
 
 echo "======= install tezos =========="
 echo "======= install tezos dependencies =========="
