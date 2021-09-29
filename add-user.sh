@@ -9,6 +9,7 @@ mkdir /home/tezos/.ssh/
 chown -R tezos:tezos /home/tezos/.ssh/
 chmod 700 /home/tezos/.ssh/
 touch /home/tezos/.ssh/authorized_keys
+chown -R tezos:tezos /home/tezos/.ssh/authorized_keys
 chmod 600 /home/tezos/.ssh/authorized_keys
 
 echo "======= install tezos =========="
